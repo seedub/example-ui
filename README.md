@@ -2,6 +2,27 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Deployment
+
+This project includes automated deployment to AWS via GitHub Actions. See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup instructions.
+
+**Important**: Before deploying, you must configure the following GitHub repository secrets:
+- `SSH_KEY`: Your SSH private key for AWS access
+- `AWS_HOST`: Your AWS instance IP address
+- `AWS_USER`: Your AWS instance username
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+## Security
+
+This repository follows security best practices to prevent credential leaks. See [SECURITY.md](./SECURITY.md) for:
+- What NOT to commit (API keys, private keys, etc.)
+- How to use GitHub Secrets
+- Credential protection measures
+- Reporting security vulnerabilities
+
+## Development
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
