@@ -83,23 +83,25 @@ jobs:
           AWS_HOST: 35.90.6.81
           AWS_USER: ec2-user
         run: |
-          # Setup SSH
+          # Setup SSH with ssh-agent for better security
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
+          
+          # Start ssh-agent and add key (avoids writing key to disk)
+          eval $(ssh-agent -s)
+          echo "$SSH_PRIVATE_KEY" | ssh-add -
 
           # Create deployment directory on server
-          ssh -i ~/.ssh/deploy_key $AWS_USER@$AWS_HOST "mkdir -p /var/www/example-ui"
+          ssh $AWS_USER@$AWS_HOST "mkdir -p /var/www/example-ui"
 
           # Copy build files to server
-          scp -i ~/.ssh/deploy_key -r dist/* $AWS_USER@$AWS_HOST:/var/www/example-ui/
+          scp -r dist/* $AWS_USER@$AWS_HOST:/var/www/example-ui/
 
           # Copy nginx configuration
-          scp -i ~/.ssh/deploy_key nginx/example-ui.conf $AWS_USER@$AWS_HOST:/tmp/example-ui.conf
+          scp nginx/example-ui.conf $AWS_USER@$AWS_HOST:/tmp/example-ui.conf
 
           # Deploy nginx configuration and restart
-          ssh -i ~/.ssh/deploy_key $AWS_USER@$AWS_HOST << 'ENDSSH'
+          ssh $AWS_USER@$AWS_HOST << 'ENDSSH'
             # Move nginx config to proper location (requires sudo)
             sudo mv /tmp/example-ui.conf /etc/nginx/conf.d/example-ui.conf
             
@@ -115,4 +117,4 @@ jobs:
           ENDSSH
 
           # Cleanup
-          rm -f ~/.ssh/deploy_key
+          ssh-agent -k
