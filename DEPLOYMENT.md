@@ -14,13 +14,13 @@ This document describes how to set up the GitHub Actions deployment pipeline to 
    
    You need to add the following secret to your GitHub repository:
    
-   - `AWS_SSH_PRIVATE_KEY`: Your SSH private key for accessing the AWS instance
+   - `SSH_KEY`: Your SSH private key for accessing the AWS instance
 
    To add this secret:
    1. Go to your repository on GitHub
    2. Navigate to Settings → Secrets and variables → Actions
    3. Click "New repository secret"
-   4. Name: `AWS_SSH_PRIVATE_KEY`
+   4. Name: `SSH_KEY`
    5. Value: Paste your entire SSH private key (the contents of your .pem file)
 
 ## AWS Instance Setup

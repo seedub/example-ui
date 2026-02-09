@@ -85,7 +85,7 @@ jobs:
 
       - name: Deploy to AWS Instance
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
           AWS_HOST: 35.90.6.81
           AWS_USER: ec2-user
         run: |
@@ -95,7 +95,7 @@ jobs:
           
           # Start ssh-agent and add key (avoids writing key to disk)
           eval $(ssh-agent -s)
-          echo "$SSH_PRIVATE_KEY" | ssh-add -
+          echo "$SSH_KEY" | ssh-add -
 
           # Create deployment directory on server
           ssh $AWS_USER@$AWS_HOST "mkdir -p /var/www/example-ui"
