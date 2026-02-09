@@ -1,0 +1,118 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test --if-present
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy to AWS Instance
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          AWS_HOST: 35.90.6.81
+          AWS_USER: ec2-user
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $AWS_HOST >> ~/.ssh/known_hosts
+
+          # Create deployment directory on server
+          ssh -i ~/.ssh/deploy_key $AWS_USER@$AWS_HOST "mkdir -p /var/www/example-ui"
+
+          # Copy build files to server
+          scp -i ~/.ssh/deploy_key -r dist/* $AWS_USER@$AWS_HOST:/var/www/example-ui/
+
+          # Copy nginx configuration
+          scp -i ~/.ssh/deploy_key nginx/example-ui.conf $AWS_USER@$AWS_HOST:/tmp/example-ui.conf
+
+          # Deploy nginx configuration and restart
+          ssh -i ~/.ssh/deploy_key $AWS_USER@$AWS_HOST << 'ENDSSH'
+            # Move nginx config to proper location (requires sudo)
+            sudo mv /tmp/example-ui.conf /etc/nginx/conf.d/example-ui.conf
+            
+            # Set proper permissions on web files
+            sudo chown -R nginx:nginx /var/www/example-ui
+            sudo chmod -R 755 /var/www/example-ui
+            
+            # Test nginx configuration
+            sudo nginx -t
+            
+            # Reload nginx
+            sudo systemctl reload nginx
+          ENDSSH
+
+          # Cleanup
+          rm -f ~/.ssh/deploy_key
