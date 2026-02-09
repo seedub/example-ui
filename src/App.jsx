@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
-const API_BASE_URL = 'https://example-api.iamscribe.org'
+const API_BASE_URL = `http://${window.location.hostname}:8080`
 
 function App() {
   const [items, setItems] = useState([])
