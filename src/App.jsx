@@ -125,7 +125,7 @@ function App() {
         </form>
       </div>
 
-      <div className="items-container">
+      <div className="items-container" aria-live="polite" aria-atomic="false">
         {loading ? (
           <p>Loading items...</p>
         ) : items.length === 0 ? (
@@ -141,6 +141,7 @@ function App() {
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
                       className="item-input"
+                      aria-label="Edit item name"
                     />
                     <button onClick={() => handleUpdateItem(item.id)} className="save-button">
                       Save
@@ -153,10 +154,10 @@ function App() {
                   <div className="view-item">
                     <span className="item-name">{item.name}</span>
                     <div className="item-actions">
-                      <button onClick={() => startEditing(item)} className="edit-button">
+                      <button onClick={() => startEditing(item)} className="edit-button" aria-label={`Edit ${item.name}`}>
                         Edit
                       </button>
-                      <button onClick={() => handleDeleteItem(item.id)} className="delete-button">
+                      <button onClick={() => handleDeleteItem(item.id)} className="delete-button" aria-label={`Delete ${item.name}`}>
                         Delete
                       </button>
                     </div>
