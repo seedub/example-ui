@@ -121,7 +121,7 @@ function App() {
             placeholder="Enter item name"
             className="item-input"
           />
-          <button type="submit" className="add-button">Add Item</button>
+          <button type="submit" className="add-button" aria-label="Add new item">Add Item</button>
         </form>
       </div>
 
@@ -143,7 +143,7 @@ function App() {
                       className="item-input"
                       aria-label="Edit item name"
                     />
-                    <button onClick={() => handleUpdateItem(item.id)} className="save-button">
+                    <button onClick={() => handleUpdateItem(item.id)} className="save-button" aria-label={`Save changes to ${editingName}`}>
                       Save
                     </button>
                     <button onClick={cancelEditing} className="cancel-button">
