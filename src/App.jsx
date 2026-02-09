@@ -8,8 +8,10 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newItemName, setNewItemName] = useState('')
+  const [newItemDescription, setNewItemDescription] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
+  const [editingDescription, setEditingDescription] = useState('')
 
   // Fetch all items on component mount
   useEffect(() => {
@@ -44,12 +46,16 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: newItemName }),
+        body: JSON.stringify({ 
+          name: newItemName,
+          description: newItemDescription 
+        }),
       })
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       setNewItemName('')
+      setNewItemDescription('')
       await fetchItems()
     } catch (error) {
       setError('Error adding item')
@@ -81,13 +87,17 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: editingName }),
+        body: JSON.stringify({ 
+          name: editingName,
+          description: editingDescription 
+        }),
       })
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       setEditingId(null)
       setEditingName('')
+      setEditingDescription('')
       await fetchItems()
     } catch (error) {
       setError('Error updating item')
@@ -98,11 +108,13 @@ function App() {
   const startEditing = (item) => {
     setEditingId(item.id)
     setEditingName(item.name)
+    setEditingDescription(item.description || '')
   }
 
   const cancelEditing = () => {
     setEditingId(null)
     setEditingName('')
+    setEditingDescription('')
   }
 
   return (
@@ -119,6 +131,13 @@ function App() {
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder="Enter item name"
+            className="item-input"
+          />
+          <input
+            type="text"
+            value={newItemDescription}
+            onChange={(e) => setNewItemDescription(e.target.value)}
+            placeholder="Enter item description (optional)"
             className="item-input"
           />
           <button type="submit" className="add-button" aria-label="Add new item">Add Item</button>
@@ -143,16 +162,31 @@ function App() {
                       className="item-input"
                       aria-label="Edit item name"
                     />
-                    <button onClick={() => handleUpdateItem(item.id)} className="save-button" aria-label={`Save changes to ${editingName}`}>
-                      Save
-                    </button>
-                    <button onClick={cancelEditing} className="cancel-button">
-                      Cancel
-                    </button>
+                    <input
+                      type="text"
+                      value={editingDescription}
+                      onChange={(e) => setEditingDescription(e.target.value)}
+                      className="item-input"
+                      placeholder="Description (optional)"
+                      aria-label="Edit item description"
+                    />
+                    <div>
+                      <button onClick={() => handleUpdateItem(item.id)} className="save-button" aria-label={`Save changes to ${editingName}`}>
+                        Save
+                      </button>
+                      <button onClick={cancelEditing} className="cancel-button">
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="view-item">
-                    <span className="item-name">{item.name}</span>
+                    <div className="item-content">
+                      <span className="item-name">{item.name}</span>
+                      {item.description && (
+                        <span className="item-description">{item.description}</span>
+                      )}
+                    </div>
                     <div className="item-actions">
                       <button onClick={() => startEditing(item)} className="edit-button" aria-label={`Edit ${item.name}`}>
                         Edit
