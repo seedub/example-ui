@@ -86,8 +86,8 @@ jobs:
       - name: Deploy to AWS Instance
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
-          AWS_HOST: 35.90.6.81
-          AWS_USER: ec2-user
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USER: ${{ secrets.AWS_USER }}
         run: |
           # Setup SSH with ssh-agent for better security
           mkdir -p ~/.ssh

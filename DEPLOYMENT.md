@@ -5,23 +5,27 @@ This document describes how to set up the GitHub Actions deployment pipeline to 
 ## Prerequisites
 
 1. **AWS Instance Setup**
-   - Instance IP: 35.90.6.81 (us-west-2)
+   - Instance IP: [Your AWS instance IP]
    - SSH access configured
    - Nginx installed
-   - User: ec2-user (standard Amazon Linux user)
+   - User: [Your EC2 user, typically ec2-user for Amazon Linux]
 
 2. **GitHub Repository Secrets**
    
-   You need to add the following secret to your GitHub repository:
+   You need to add the following secrets to your GitHub repository:
    
    - `SSH_KEY`: Your SSH private key for accessing the AWS instance
+   - `AWS_HOST`: Your AWS instance IP address (e.g., 35.90.6.81)
+   - `AWS_USER`: Your AWS instance user (e.g., ec2-user for Amazon Linux)
 
-   To add this secret:
+   To add these secrets:
    1. Go to your repository on GitHub
    2. Navigate to Settings → Secrets and variables → Actions
    3. Click "New repository secret"
-   4. Name: `SSH_KEY`
-   5. Value: Paste your entire SSH private key (the contents of your .pem file)
+   4. Add each of the three secrets listed above:
+      - Name: `SSH_KEY`, Value: Paste your entire SSH private key (the contents of your .pem file)
+      - Name: `AWS_HOST`, Value: Your AWS instance IP address
+      - Name: `AWS_USER`, Value: Your AWS instance username
 
 ## AWS Instance Setup
 
@@ -101,13 +105,13 @@ If you need to deploy manually:
 
 2. Copy files to the server:
    ```bash
-   scp -i /path/to/key.pem -r dist/* ec2-user@35.90.6.81:/var/www/example-ui/
+   scp -i /path/to/key.pem -r dist/* <AWS_USER>@<AWS_HOST>:/var/www/example-ui/
    ```
 
 3. Update nginx config:
    ```bash
-   scp -i /path/to/key.pem nginx/example-ui.conf ec2-user@35.90.6.81:/tmp/
-   ssh -i /path/to/key.pem ec2-user@35.90.6.81
+   scp -i /path/to/key.pem nginx/example-ui.conf <AWS_USER>@<AWS_HOST>:/tmp/
+   ssh -i /path/to/key.pem <AWS_USER>@<AWS_HOST>
    sudo mv /tmp/example-ui.conf /etc/nginx/conf.d/example-ui.conf
    sudo nginx -t
    sudo systemctl reload nginx
@@ -123,6 +127,8 @@ If you need to deploy manually:
 ## Accessing Your Application
 
 After successful deployment, your application will be available at:
-- http://35.90.6.81
+- http://\<AWS_HOST\>
+
+Replace `<AWS_HOST>` with your AWS instance IP address.
 
 If you have a domain name, update the `server_name` directive in `nginx/example-ui.conf` and configure your DNS to point to the instance IP.
