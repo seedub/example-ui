@@ -38,19 +38,15 @@ On your AWS instance, ensure the following are set up:
    sudo systemctl start nginx
    ```
 
-2. **Create web directory**:
-   ```bash
-   sudo mkdir -p /var/www/example-ui
-   sudo chown -R nginx:nginx /var/www/example-ui
-   ```
-
-3. **Configure firewall** (if applicable):
+2. **Configure firewall** (if applicable):
    ```bash
    sudo firewall-cmd --permanent --add-service=http
    sudo firewall-cmd --reload
    ```
 
-4. **Ensure EC2 Security Group allows HTTP (port 80)** in AWS Console
+3. **Ensure EC2 Security Group allows HTTP (port 80)** in AWS Console
+
+**Note**: The web directory `/var/www/example-ui` will be created automatically during the first deployment. You don't need to create it manually.
 
 ## Nginx Configuration
 
@@ -82,8 +78,10 @@ The workflow is defined in `.github/workflows/deploy.yml` and includes three job
 ### 3. Deploy
 - Downloads build artifacts
 - SSHs to AWS instance
-- Copies built files to `/var/www/example-ui`
+- Copies built files to temporary directory
+- Uses sudo to move files to `/var/www/example-ui`
 - Updates nginx configuration
+- Sets proper file permissions
 - Reloads nginx
 
 ## Triggering Deployment
@@ -103,18 +101,25 @@ If you need to deploy manually:
    npm run build
    ```
 
-2. Copy files to the server:
+2. Copy files to the server temporary directory:
    ```bash
-   scp -i /path/to/key.pem -r dist/* <AWS_USER>@<AWS_HOST>:/var/www/example-ui/
+   ssh -i /path/to/key.pem <AWS_USER>@<AWS_HOST> "mkdir -p /tmp/example-ui-deploy"
+   scp -i /path/to/key.pem -r dist/* <AWS_USER>@<AWS_HOST>:/tmp/example-ui-deploy/
    ```
 
-3. Update nginx config:
+3. Update nginx config and move files:
    ```bash
    scp -i /path/to/key.pem nginx/example-ui.conf <AWS_USER>@<AWS_HOST>:/tmp/
-   ssh -i /path/to/key.pem <AWS_USER>@<AWS_HOST>
+   ssh -i /path/to/key.pem <AWS_USER>@<AWS_HOST> << 'EOF'
+   sudo mkdir -p /var/www/example-ui
+   sudo rsync -a --delete /tmp/example-ui-deploy/ /var/www/example-ui/
+   rm -rf /tmp/example-ui-deploy
    sudo mv /tmp/example-ui.conf /etc/nginx/conf.d/example-ui.conf
+   sudo chown -R nginx:nginx /var/www/example-ui
+   sudo chmod -R 755 /var/www/example-ui
    sudo nginx -t
    sudo systemctl reload nginx
+   EOF
    ```
 
 ## Troubleshooting
