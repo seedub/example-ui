@@ -97,17 +97,24 @@ jobs:
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add -
 
-          # Create deployment directory on server
-          ssh $AWS_USER@$AWS_HOST "mkdir -p /var/www/example-ui"
-
-          # Copy build files to server
-          scp -r dist/* $AWS_USER@$AWS_HOST:/var/www/example-ui/
+          # Copy build files to temporary directory on server
+          ssh $AWS_USER@$AWS_HOST "mkdir -p /tmp/example-ui-deploy"
+          scp -r dist/* $AWS_USER@$AWS_HOST:/tmp/example-ui-deploy/
 
           # Copy nginx configuration
           scp nginx/example-ui.conf $AWS_USER@$AWS_HOST:/tmp/example-ui.conf
 
           # Deploy nginx configuration and restart
           ssh $AWS_USER@$AWS_HOST << 'ENDSSH'
+            # Create deployment directory with sudo
+            sudo mkdir -p /var/www/example-ui
+            
+            # Move files from temporary location to web directory
+            sudo rsync -a --delete /tmp/example-ui-deploy/ /var/www/example-ui/
+            
+            # Clean up temporary directory
+            rm -rf /tmp/example-ui-deploy
+            
             # Move nginx config to proper location (requires sudo)
             sudo mv /tmp/example-ui.conf /etc/nginx/conf.d/example-ui.conf
             
